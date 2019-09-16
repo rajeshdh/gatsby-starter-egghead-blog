@@ -33,10 +33,11 @@ const Hero = () => {
             z-index: 5;
             line-height: 1.5;
             margin: 0;
-            max-width: ${rhythm(15)};
+            max-width: ${rhythm(100)};
           `}
         >
-          Your blog says the things you want to say.
+          Hi, I'm Rajesh. I am a developer specializing in building useful things with Node.js, MongoDB and react.js.
+
         </h1>
       </Container>
       <div
