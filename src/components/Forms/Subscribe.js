@@ -7,21 +7,20 @@ import { rhythm } from '../../lib/typography'
 import { bpMaxSM } from '../../lib/breakpoints'
 import Message from '../ConfirmMessage/Message'
 import { PleaseConfirmIllustration } from '../ConfirmMessage/Illustrations'
-
-const FORM_ID = process.env.CONVERTKIT_SIGNUP_FORM
+import addToMailchimp from 'gatsby-plugin-mailchimp';
 
 const SubscribeSchema = Yup.object().shape({
   email_address: Yup.string()
     .email('Invalid email address')
     .required('Required'),
-  first_name: Yup.string(),
+  name: Yup.string(),
 })
 
 const PostSubmissionMessage = ({ response }) => {
   return (
     <div>
       <Message
-        illustration={PleaseConfirmIllustration}
+        illustration={<PleaseConfirmIllustration />}
         title={`Great, one last thing...`}
         body={`I just sent you an email with the confirmation link. 
           **Please check your inbox!**`}
@@ -38,28 +37,18 @@ class SignUp extends React.Component {
   async handleSubmit(values) {
     this.setState({ submitted: true })
     try {
-      const response = await fetch(
-        `https://app.convertkit.com/forms/${FORM_ID}/subscriptions`,
-        {
-          method: 'post',
-          body: JSON.stringify(values, null, 2),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        },
-      )
-
-      const responseJson = await response.json()
+ 
+      const response = await addToMailchimp(values.email_address, {name : values.name})
 
       this.setState({
         submitted: true,
-        response: responseJson,
+        response: response,
         errorMessage: null,
       })
     } catch (error) {
+
       this.setState({
-        submitted: false,
+        submitted: true,
         errorMessage: 'Something went wrong!',
       })
     }
@@ -68,7 +57,7 @@ class SignUp extends React.Component {
   render() {
     const { submitted, response, errorMessage } = this.state
     const { theme } = this.props
-    const successful = response && response.status === 'success'
+    const successful = response && response.result === 'success'
 
     return (
       <div>
@@ -86,7 +75,7 @@ class SignUp extends React.Component {
         <Formik
           initialValues={{
             email_address: '',
-            first_name: '',
+            name: '',
           }}
           validationSchema={SubscribeSchema}
           onSubmit={values => this.handleSubmit(values)}
@@ -126,7 +115,7 @@ class SignUp extends React.Component {
                     }
                   `}
                 >
-                  <label htmlFor="first_name">
+                  <label htmlFor="name">
                     <div
                       css={css`
                         display: flex;
@@ -134,17 +123,17 @@ class SignUp extends React.Component {
                         align-items: flex-end;
                       `}
                     >
-                      First Name
+                      Name
                       <ErrorMessage
-                        name="first_name"
+                        name="name"
                         component="span"
                         className="field-error"
                       />
                     </div>
                     <Field
-                      aria-label="your first name"
+                      aria-label="your name"
                       aria-required="false"
-                      name="first_name"
+                      name="name"
                       placeholder="Jane"
                       type="text"
                     />
@@ -188,7 +177,7 @@ class SignUp extends React.Component {
                 </Form>
               )}
               {submitted &&
-                !isSubmitting && <PostSubmissionMessage response={response} />}
+                successful && <PostSubmissionMessage response={response} />}
               {errorMessage && <div>{errorMessage}</div>}
             </>
           )}
